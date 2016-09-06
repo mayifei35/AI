@@ -1,8 +1,5 @@
 import numpy 
-#numpy.random.seed(42)
 
-
-### Load the dataset
 my_data = numpy.genfromtxt('djia_temp.csv', delimiter=';', skip_header=1)
 djia = my_data[:, 1]
 highTemp = my_data[:, 2]
