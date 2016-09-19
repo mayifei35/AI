@@ -25,6 +25,16 @@ public class MyAgent extends BasicMarioAIAgent implements Agent
 		return (levelScene[row][col] == 0);
 	}
 
+        /* Does(row, col) contain a coin? defined coins in agent.java
+        public boolean hasCoin (int row, int col){
+	    return coins[row][col] !=0;
+	}
+	*/ 
+	/* Is (row, col)  a pit? defined pit in basic agent.java
+        public boolean isPit (int row, int col){
+	    return pits[row][col] !=0;
+	}
+	*/ 
 
 	// Display Mario's view of the world
 	public void printObservation() {
@@ -40,9 +50,14 @@ public class MyAgent extends BasicMarioAIAgent implements Agent
 				else if (!isEmpty(i, j)) {
 					System.out.print("B ");
 				}
-				else {
-					System.out.print(" ");
-				}
+				/*
+				else if (hasCoins(i,j)){
+					System.out.print("C ");
+					}*/
+				/*
+				else if (hasCoins(i,j)){
+					System.out.print("P ");
+					}*/
 			}
 			System.out.println();
 		}
@@ -54,7 +69,16 @@ public class MyAgent extends BasicMarioAIAgent implements Agent
 	{
 		action[Mario.KEY_SPEED] = action[Mario.KEY_JUMP] = isMarioAbleToJump || !isMarioOnGround;
 		action[Mario.KEY_RIGHT] = true;
-        printObservation();
+		//jump when enemies on the right
+		if (hasEnemy(10,9) &&isMarioAbleToJump){
+		    action[Mario.KEY_JUMP]=true;
+		}
+		//move to the left when enemy is above
+		action[Mario.KEY_LEFT]=hasEnemy(9,10);
+		//stay still when enemy is below
+		action[Mario.KEY_RIGHT]=!hasEnemy(9,8);
+		//if there is a pit
+		//printObservation();
 		return action;
 	}
 
