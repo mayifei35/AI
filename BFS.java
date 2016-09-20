@@ -2,7 +2,17 @@ import java.util.Random;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
-//this takes wayyyyyyyyyy to long to run
+import java.util.HashSet;
+
+class queueNode {
+    public SlidingBoard board;
+    public ArrayList<SlidingMove> path;
+    public queueNode(SlidingBoard b, ArrayList<SlidingMove> p) {
+	board = b;
+	path = p;
+    }
+}
+
 
 class BFS extends SlidingPlayer {
 
@@ -12,47 +22,35 @@ class BFS extends SlidingPlayer {
     // The constructor gets the initial board
     public BFS(SlidingBoard _sb) {
         super(_sb);
-	//path=bfs(_sb);
+	path = bfs(_sb);
     }
-
-
-    //find the next move given a board state
-    public SlidingMove bfs(SlidingBoard board){
-	Queue<SlidingMove> queue= new LinkedList<>();
-	queue.addAll(board.getLegalMoves());
-	ArrayList<SlidingMove> seen=new ArrayList<>();
-	SlidingMove curr;
-	System.out.println("so far so good");
-	while(!queue.isEmpty()){
-	    System.out.println("in loop");
-	    curr =queue.remove();
-	    SlidingBoard childBoard=new SlidingBoard (board.size);
-	    System.out.println("perform a move");
-	    childBoard.setBoard(board);
-	    childBoard.doMove(curr);
-	    System.out.println("check goal");
-	    //if it is goal
-	    if (childBoard.isSolved()){
-		System.out.println("found it");
-		return curr;
+    public ArrayList<SlidingMove> bfs(SlidingBoard board) {
+	HashSet<String> seen = new HashSet<String>();
+	LinkedList<queueNode> queue = new LinkedList<queueNode>();
+	queueNode curr = new queueNode(board, new ArrayList<SlidingMove>());
+	while (!curr.board.isSolved()) {
+	    ArrayList<SlidingMove> legal = curr.board.getLegalMoves();
+	    for (SlidingMove move : legal) {
+		SlidingBoard childBoard = new SlidingBoard(curr.board.size);
+		childBoard.setBoard(curr.board);
+		childBoard.doMove(move);
+		if (!seen.contains(childBoard.toString())) {
+		    seen.add(childBoard.toString());
+		    ArrayList<SlidingMove> childPath = (ArrayList<SlidingMove>)curr.path.clone();
+		    childPath.add(move);
+		    queue.add(new queueNode(childBoard, childPath));
+		}
 	    }
-	    else {
-		queue.addAll(childBoard.getLegalMoves());
-		//path.add(curr);
-	    }
-	    seen.add(curr);
+	    curr = queue.remove();
 	}
-	System.out.println("failed");
-        return null;
+	return curr.path;
     }
-
 
     // Perform a single move based on the current given board state
     public SlidingMove makeMove(SlidingBoard board) {
-	//move_number++;
-	//return path.get(move_number);
+	move_number++;
+	return path.get(move_number);
 
-	return 	bfs(board); 
     }   
 }
 
