@@ -44,7 +44,6 @@ def linearRegressionAve ():
     end_cost =numpy.sum(numpy.power((aveTemp*weight+bias - djia), 2))
     print 'ave end cost %s'%end_cost
 
-
 def linearRegressionDif ():
     learning_rate = 0.1
     global weight 
