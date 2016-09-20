@@ -11,6 +11,7 @@ class StackNode {
 	path = p;
     }
 }
+
 class DFS extends SlidingPlayer {
     ArrayList<SlidingMove> path;
     int move_number = -1;
