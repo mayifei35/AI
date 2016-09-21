@@ -124,7 +124,6 @@ public class RandomBot extends OthelloPlayer {
     }
 
 
-
     public OthelloMove dfs(OthelloBoard board ){
 	int depth=0;
 	int limit=6;  
