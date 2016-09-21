@@ -148,7 +148,7 @@ public class GA extends JComponent{
 	int r=ThreadLocalRandom.current().nextInt(0,256);
 	int g=ThreadLocalRandom.current().nextInt(0,256);
 	int b=ThreadLocalRandom.current().nextInt(0,256);
-	color oneColor=new Color(r,g,b);
+	Color oneColor=new Color(r,g,b);
 	return oneColor;
     }
     
@@ -190,7 +190,7 @@ public class GA extends JComponent{
   
     public double  totalFitness( ArrayList<GASolution> population){
 	double fitness=0;
-	for(each solution : population){
+	for(GASolution solution : population){
 	    fitness=fitness+solution.parentFitness();
 	}
 	return fitness;
@@ -212,7 +212,7 @@ public class GA extends JComponent{
     //needs work
     public ArrayList<GASolution>  pickParent(ArrayList<GASolution> _parents){
 	ArrayList<GASolution> parents=new ArrayList<GASolution>();
-	for( each parent : _parents){
+	for( GASolution parent : _parents){
 	    parentFitness(parent);
 	    //get the hightest two
 	    parents.add(parent);
@@ -237,8 +237,8 @@ public class GA extends JComponent{
 	//generate a random number between 0 and 1,rate
 	if (Math.random()<0.001){
 	    ArrayList<MyPolygon> cmPolygons=child. getShapes();
-	    for (each cmp: cmPolygons){
-		Color c=cmp.getColor;
+	    for (MyPolygon cmp: cmPolygons){
+		Color c=cmp.getColor();
 		Polygon p=cmp.getPolygon();
 		c.brighter();
 		int x=ThreadLocalRandom.current().nextInt(0,200);
