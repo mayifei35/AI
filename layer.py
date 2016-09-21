@@ -46,7 +46,6 @@ class layer:
         print 'pred',pred.shape
         return (np.sum(np.power((y - pred), 2)))
 
-            
 def loadDataset(filename='wine.data'):
     #my_data = np.genfromtxt(filename, delimiter=',', skip_header=1)
     my_data = np.genfromtxt(filename, delimiter=',')
