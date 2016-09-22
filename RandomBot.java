@@ -1,10 +1,25 @@
+//YIfei Ma
 import java.util.Random;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Stack;
+import java.util.LinkedList;
 
-public class RandomBot extends OthelloPlayer {
+
+class stackNode{
+    public ArrayList<OthelloMove> path;
+    public OthelloBoard board;
+
+    public stackNode(ArrayList<OthelloMove> _path, OthelloBoard _b) {
+	path=_path;
+	board=_b;
+    }
+
+}
+
+
+public class DFSBot extends OthelloPlayer {
     
     // makeMove gets a current OthelloBoard game state as input
     // and then returns an OthelloMove object
@@ -42,30 +57,9 @@ public class RandomBot extends OthelloPlayer {
     //  int opponentColor = getOpponentColor();
     
     
-    public RandomBot(Integer _color) {
+    public DFSBot(Integer _color) {
         super(_color);
     }
-
-    class stackNode{
-	ArrayList<OthelloMove> path=new ArrayList<OthelloMove>();
-	int score;
-	OthelloMove current;
-	
-	    public stackNode(ArrayList<OthelloMove> _path, int _score, OthelloMove _current) {
-	    path=_path;
-	    score=score+_score;
-	    current=_current;
-	}
-	public int getScore(){
-	    return this.score;
-	}
-    }
-
-
-
-
-
-
     public OthelloBoard simulate(OthelloMove move,OthelloBoard board){
 	int[][] b=board.getBoard();
 	int row=move.getRow();
@@ -124,45 +118,30 @@ public class RandomBot extends OthelloPlayer {
     }
 
 
-    public OthelloMove dfs(OthelloBoard board ){
-	int depth=0;
-	int limit=6;  
-	//get all legal moves from start board 
-	ArrayList<OthelloMove> legal=board.legalMoves(playerColor);
-	ArrayList<OthelloMove> currPath; 
-	Stack <stackNode> s=new Stack<stackNode>();
-	OthelloMove curr;
-	stackNode n;
-	stackNode best;
-	//push all legal moves into the stack
-	for (int q=0;q<legal.size();q++){
-	    currPath.add(legal.get(q));
-	    n=new stackNode(currPath,heuristic(curr,board),current);
-	    s.push(n);
-	    currPath.remove(0);
-	}
-	//iterate through the tree and keep adding to the stack
-	while (!s.isEmpty()&depth<=limit){
-	    curr=s.pop().current();    
-	    //System.out.println(element.data + "\t");
-	    //do the move and get next legal moves
 
-	    board=simulate(curr,board);
-	    legal=board.legalMoves(playerColor);
-	    //if its not a leaf, add its children to the  stack
-	    if(!legal.isEmpty()){  
-		for (int w=0;w<legal.size();w++){
-		    currPath.add(legal.get(w));
-		    n=new stackNode(currPath,heuristic(curr,board),curr);
-		    s.push(n);
+    public OthelloMove dfs(OthelloBoard board ){
+	//int depth=0;
+	//int limit=6;  
+	HashSet<String> seen = new HashSet<String>();
+	LinkedList<stackNode> stack = new LinkedList<stackNode>();
+	stackNode curr = new stackNode(new ArrayList<OthelloMove>(),board);
+	while (!curr.board.gameOver()){
+	    ArrayList<OthelloMove> legal = curr.board.legalMoves(playerColor);
+	    for (OthelloMove move : legal) {
+	        OthelloBoard childBoard = new OthelloBoard(curr.board.size,true);
+		childBoard.setBoard(curr.board.getBoard());
+	        makeMove(childBoard);
+		if (!seen.contains(childBoard.toString())) {
+		    seen.add(childBoard.toString());
+		    ArrayList<OthelloMove> childPath = (ArrayList<OthelloMove>)curr.path.clone();
+		    childPath.add(move);
+		    stack.add(new stackNode(childPath,childBoard));
 		}
-		depth++;	      
 	    }
-	    if (best.getScore()<=curr.getScore()){
-		best=curr;
-	    }
-	}  
-	return best.path.get(0);
-    }  
-} 
+	    curr = stack.pop();
+	}
+	return curr.path.get(0);
+    } 
+}
+
 
