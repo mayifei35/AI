@@ -9,3 +9,5 @@
 	linear_regression.py is using a linear regression model that predicts stock market based on temperature.
 	
 	GA.java is the genetic algorithm that creates polygons and reproduce new ones to recreate an image. It has a NullPointerException when it runs.
+	
+	wine.data is another set of data for ann.
