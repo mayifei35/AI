@@ -9,6 +9,33 @@ import java.util.ArrayList;
 import java.lang.InterruptedException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.lang.Math;
+import java.util.Random;
+
+
+// A Canvas to draw the highest ranked solution each epoch
+class GACanvas extends JComponent{
+
+    int width, height;
+    GASolution solution;
+
+    public GACanvas(int WINDOW_WIDTH, int WINDOW_HEIGHT) {
+    	width = WINDOW_WIDTH;
+    	height = WINDOW_HEIGHT;
+    }
+ 
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
+
+    public void setImage(GASolution sol) {
+	solution = sol;
+    }
+
+    public void paintComponent(Graphics g) {
+	BufferedImage image = solution.getImage();
+	g.drawImage(image, 0, 0, null);
+    }
+}
+
 
 // Each MyPolygon has a color and a Polygon object
 class MyPolygon {
@@ -31,19 +58,45 @@ class MyPolygon {
 }
 
 
-// Each GASolution has 10 MyPolygon objects
+
 class GASolution {
 
     ArrayList<MyPolygon> shapes;
 
     // width and height are for the full resulting image
-    int width, height;
-
-    public GASolution(int _width, int _height) {
+    int width, height,nPoints,nPoly;
+    
+    // Each GASolution has 10 MyPolygon objects,each myPolygon has 5 points
+    public GASolution(int _width, int _height, int _nPoly, int _nPoints) {
 	shapes = new ArrayList<MyPolygon>();
 	width = _width;
 	height = _height;
+	nPoints=_nPoints;
+	nPoly=_nPoly;
     }
+
+    public GASolution(int _width, int _height, int _nPoly, int _nPoints, ArrayList<MyPolygon> _shapes) {
+	shapes = new ArrayList<MyPolygon>();
+	width = _width;
+	height = _height;
+	nPoly = _nPoly;
+	nPoints = _nPoints;
+	shapes = _shapes;
+    }
+
+    public GASolution deepCopy(){
+	GASolution copy= new GASolution(width, height, nPoly, nPoints);
+	for (MyPolygon poly : shapes){
+	    Polygon oldPoly = poly.getPolygon();
+	    Polygon newPoly = new Polygon(oldPoly.xpoints.clone(), oldPoly.ypoints.clone(), oldPoly.npoints);
+	    Color oldColor = poly.getColor();
+	    Color newColor = new Color(oldColor.getRGB());
+	    MyPolygon newMyPoly = new MyPolygon(newPoly, newColor);
+	    copy.addPolygon(newMyPoly);
+	}
+	return copy;
+    }
+
 
     public void addPolygon(MyPolygon p) {
 	shapes.add(p);
@@ -78,69 +131,15 @@ class GASolution {
     public String toString() {
 	return "" + shapes;
     }
-}
-
-
-// A Canvas to draw the highest ranked solution each epoch
-class GACanvas extends JComponent{
-
-    int width, height;
-    GASolution solution;
-
-    public GACanvas(int WINDOW_WIDTH, int WINDOW_HEIGHT) {
-    	width = WINDOW_WIDTH;
-    	height = WINDOW_HEIGHT;
-    }
- 
-    public int getWidth() { return width; }
-    public int getHeight() { return height; }
-
-    public void setImage(GASolution sol) {
-	solution = sol;
-    }
-
-    public void paintComponent(Graphics g) {
-	BufferedImage image = solution.getImage();
-	g.drawImage(image, 0, 0, null);
-    }
-}
-
-
-public class GA extends JComponent{
-	
-    GACanvas canvas;
-    int width, height;
-    BufferedImage realPicture;
-    ArrayList<GASolution> population;
-
-    // Adjust these parameters as necessary for your simulation
-    double MUTATION_RATE = 0.01;
-    double CROSSOVER_RATE = 0.6;
-    int MAX_POLYGON_POINTS = 5;
-    int MAX_POLYGONS = 10;
-
-    public GA(GACanvas _canvas, BufferedImage _realPicture) {
-        canvas = _canvas;
-        realPicture = _realPicture;
-        width = realPicture.getWidth();
-        height = realPicture.getHeight();
-        population = createPopulation(50);
-
-
-        // You'll need to define the following functions
-	// Make 50 new, random chromosomes
-       	
-    }
-
+    
+    
     public Polygon createPolygon(){
-	int npoints=5;
-	int [] xpoints;
-	int [] ypoints;
-	for (int l=0;l<npoints;l++){
-	    xpoints[l]=ThreadLocalRandom.current().nextInt(0,201);
-	    ypoints[l]=ThreadLocalRandom.current().nextInt(0,201);
-	}
-	Polygon onePolygon=new Polygon(xpoints,ypoints,npoints);
+	Polygon onePolygon = new Polygon();
+	    for(int p =0; p < nPoints; p++){
+		int x = (int)(Math.random()*(width));
+		int y = (int)(Math.random()*(height));
+		onePolygon.addPoint(x, y);
+	    }
 	return onePolygon;
     }
 
@@ -151,105 +150,200 @@ public class GA extends JComponent{
 	Color oneColor=new Color(r,g,b);
 	return oneColor;
     }
-    
-    
-    public GASolution createSolution(){
-	Polygon p;
-	MyPolygon mp;
-	Color cl; 
-	ArrayList<MyPolygon> allTen=new ArrayList<>();
-	//each solution has 10 MyPolygons
-	for (int h=0;h<10;h++){
-	    cl=createColor();
-	    p=createPolygon();
-	    mp= new MyPolygon(p,cl);
-	    allTen.add(mp);
+
+    public void createSolution(){
+	for (int i = 0; i< nPoly; i++){
+	    Polygon poly=createPolygon();
+	    Color c=createColor();
+	    addPolygon(new MyPolygon(poly, c));
 	}
-	GASolution newSolution=new GASolution(200,200);
-	newSolution.shapes=allTen;
-	return newSolution;
+    }
+}
+
+
+
+
+public class GA extends JComponent{
+	
+    GACanvas canvas;
+    int width, height;
+    BufferedImage realPicture;
+    ArrayList<GASolution> population;
+    ArrayList<Double> fitnesses;
+    Random r = new Random();
+
+    // Adjust these parameters as necessary for your simulation
+    double MUTATION_RATE = 0.001;
+    double CROSSOVER_RATE = 0.6;
+    int MAX_POLYGON_POINTS = 5;
+    int MAX_POLYGONS = 10;
+    int popSize=50;
+
+    public GA(GACanvas _canvas, BufferedImage _realPicture) {
+        canvas = _canvas;
+        realPicture = _realPicture;
+        width = realPicture.getWidth();
+        height = realPicture.getHeight();
+        population = new ArrayList<GASolution>();       	
     }
 
-    //each individual is a GASolution
-    public ArrayList<GASolution> createPopulation(int popSize) {
-	ArrayList<GASolution> population=new ArrayList<GASolution>();
-	for (int i=0;i<popSize;i++){
-	    population.add(createSolution());
+    public void createPopulation(){
+	for(int g=0;g<popSize;g++){
+	    GASolution pop=new GASolution (width,height,MAX_POLYGONS,MAX_POLYGON_POINTS);
+	    pop.createSolution();
+	    population.add(pop);
 	}
-	return population;
     }
 
-    //needs to figure out how to run simulation several times
-    public double runSimulation() {
-	ArrayList<GASolution> population=createPopulation(50);
-	ArrayList<GASolution> parents=pickParent(population);
-	GASolution child=crossover(parents.get(0),parents.get(1));
-	int fitness=totalFitness(child);
-	return fitness;
+    
+    public ArrayList<GASolution> newGeneration(){
+  	ArrayList<GASolution> newGen = new ArrayList<GASolution>();
+    	for(int i = 0; i<popSize; i++){
+	    GASolution one = pickParent();
+	    GASolution two = pickParent();
+	    GASolution child; 
+	    if(Math.random()<CROSSOVER_RATE) {
+		child = crossover(one, two);
+	    }
+	    else {
+		child = one.deepCopy();
+	    }
+	    child = mutate(child);
+	    newGen.add(child);
+    	}
+    	return newGen;
     }
   
-    public double  totalFitness( ArrayList<GASolution> population){
-	double fitness=0;
-	for(GASolution solution : population){
-	    fitness=fitness+solution.parentFitness();
-	}
-	return fitness;
-    }
-    
-    public double  parentFitness(GASolution parent){
-	double total=12.0;
-	double fitness=0.0;
-        for (int k=0;k<200;k+=30){
-	    for (int p=0;p<200;p+=30){
-		if(parent.getImage().getRGB(p,k)==realPicture.getRGB(p,k)){
-		    fitness++;
-		}
-	    }
-	}
-	return fitness/total;
+    public double colorDistance(Color one, Color two){
+	double distR=Math.pow(one.getRed()-two.getRed(),2);
+	double distG=Math.pow(one.getGreen()-two.getGreen(),2);
+	double distB=Math.pow(one.getBlue()-two.getBlue(),2);
+	double distance=Math.sqrt(distR+distG+distB);
+	return distance;
     }
 
-    //needs work
-    public ArrayList<GASolution>  pickParent(ArrayList<GASolution> _parents){
-	ArrayList<GASolution> parents=new ArrayList<GASolution>();
-	for( GASolution parent : _parents){
-	    parentFitness(parent);
-	    //get the hightest two
-	    parents.add(parent);
-	}   
-	return parents;
+    public double calcFitness(GASolution solution){
+	double total=0;
+	int numPoints=50;
+	BufferedImage solutionImg=solution.getImage();
+	for (int v=0;v<numPoints;v++){
+	    int x=(int)Math.random()*width;
+	    int y=(int)Math.random()*height;
+	    Color real=new Color(realPicture.getRGB(x,y));
+	    Color simulated=new Color(solutionImg.getRGB(x,y));
+	    total+=colorDistance(real,simulated);
+	}
+	return total;
+    }
+
+    public ArrayList<Double> getPopFitnesses(){
+    	for (GASolution sol:population){
+	    fitnesses.add(calcFitness(sol));
+    	}
+    	return fitnesses;
+    }
+    
+    
+    public int getFittest(){
+	double fittest=0;
+	int count;
+	for (count=0;count<fitnesses.size();count++){
+	    if (fitnesses.get(count)>fittest){
+		fittest=fitnesses.get(count);
+	    }
+	}
+	return count;
+    }
+    public double averageFitness(){
+	double total=0;
+	for ( double fit:fitnesses){
+	    total+=fit;
+	}
+	return total/fitnesses.size();
+    }
+
+	
+    public GASolution  pickParent(){
+	double total=0;
+	for (double fit:fitnesses){
+	    total+=fit;
+	}
+	double arrow=Math.random()*total;
+	int i=-1;
+	while (arrow>1){
+	    i++;
+	    arrow-=fitnesses.get(i);
+	}
+	return population.get(i);
     }
 
     public GASolution crossover(GASolution one,GASolution two){
 	ArrayList <MyPolygon> childP=new ArrayList <MyPolygon>();
-	GASolution childSolution=new GASolution(200,200);
-	childSolution.shapes=childP;
-	for (int k=0;k<10;k=k+2){
-	    childP.add(one.shapes.get(k));
-	    childP.add(two.shapes.get(k+1));
+	Polygon parentOnePoly,parentTwoPoly,childPoly,childPoly2;
+	Color childColor;
+	for (int k=0;k<MAX_POLYGONS;k=k+2){
+	    parentOnePoly=one.getShapes().get(k).getPolygon();
+	    parentTwoPoly=one.getShapes().get(k+1).getPolygon();    
+	    childPoly=new Polygon(parentOnePoly.xpoints.clone(), parentTwoPoly.ypoints.clone(), parentOnePoly.npoints);
+	    childPoly2=new Polygon(parentTwoPoly.xpoints.clone(), parentOnePoly.ypoints.clone(), parentTwoPoly.npoints);
+	    Color c1=one.getShapes().get(k).getColor();
+	    Color c2=two.getShapes().get(k+1).getColor();
+	    if (Math.random()<0.5){
+		childP.add(new MyPolygon(childPoly,c1));
+		childP.add(new MyPolygon(childPoly2,c2));
+	    }
+	    else{
+		childP.add(new MyPolygon(childPoly,c2));
+		childP.add(new MyPolygon(childPoly2,c1));
+	    }
 	}
-	childSolution=mutate(childSolution);
-	return childSolution;
+
+	return new GASolution(one.width,one.height,one.nPoly,one.nPoints,childP);
+        
     }
 
-    //brighter color and one more point for the polygon
-    public GASolution mutate(GASolution child){
-	//generate a random number between 0 and 1,rate
-	if (Math.random()<0.001){
-	    ArrayList<MyPolygon> cmPolygons=child. getShapes();
-	    for (MyPolygon cmp: cmPolygons){
-		Color c=cmp.getColor();
-		Polygon p=cmp.getPolygon();
-		c.brighter();
-		int x=ThreadLocalRandom.current().nextInt(0,200);
-		int y=ThreadLocalRandom.current().nextInt(0,200);
-		p.addPoint(x,y);
-	    }
+    public GASolution mutate(GASolution sol){
+    	ArrayList<MyPolygon> newShapes = new ArrayList<MyPolygon>();
+    	ArrayList<MyPolygon> oldShapes = sol.getShapes();
 
-	}
-	return child;
+    	for (MyPolygon p : oldShapes){
+	    Polygon oldPoly = p.getPolygon();
+	    int[] xVals = oldPoly.xpoints.clone();
+	    int[] yVals = oldPoly.ypoints.clone();
+	    for(int i = 0; i < oldPoly.npoints; i++){
+		if(Math.random()<MUTATION_RATE){
+		    xVals[i] = (int)(xVals[i]+r.nextGaussian()*(width/10));
+		    yVals[i] = (int)(yVals[i]+r.nextGaussian()*(height/10));
+		}
+	    }
+	    Polygon newPoly = new Polygon(xVals, yVals, oldPoly.npoints);
+
+	    Color newColor = new Color(p.getColor().getRGB());
+	    if(Math.random()<MUTATION_RATE){
+		float r = (float)Math.random();
+		float g = (float)Math.random();
+		float b = (float)Math.random();
+		newColor = new Color(r, g, b);
+	    }
+	    newShapes.add(new MyPolygon(newPoly, newColor));
+    	}
+
+    	return new GASolution(sol.width, sol.height, sol.nPoly, sol.nPoints, newShapes);
     }
     
+
+    //needs to figure out how to run simulation several times
+    public void runSimulation(int epochs) {
+        createPopulation();
+    	for(int i = 0; i < epochs; i++){
+	    population=newGeneration();
+	    if (i % 100==0){
+		System.out.println("Epochs = " + i + "; Average fitness = " + averageFitness());
+	    }
+	    canvas.setImage(population.get(getFittest()));
+	    canvas.repaint();
+	}
+    }
  
 
     public static void main(String[] args) throws IOException {
@@ -267,8 +361,7 @@ public class GA extends JComponent{
         frame.setVisible(true);
 
         GA pt = new GA(theCanvas, realPicture);
-	double fit=pt.runSimulation();
-	System.out.println(fit);
+        pt.runSimulation(5000);
     }
 }
 
