@@ -46,17 +46,18 @@ class layer:
         print 'pred',pred.shape
         return (np.sum(np.power((y - pred), 2)))
 
-def loadDataset(filename='wine.data'):
+            
+def loadDataset(filename='breast_cancer.csv'):
     #my_data = np.genfromtxt(filename, delimiter=',', skip_header=1)
     my_data = np.genfromtxt(filename, delimiter=',')
     # The labels of the cases
     # Raw labels are either 4 (cancer) or 2 (no cancer)
     # Normalize these classes to 0/1
-    #y = (my_data[:, 10] / 2) - 1
-    y = my_data[:, 0 ]
+    y = (my_data[:, 10] / 2) - 1
+    #y = my_data[:, 0 ]
     # Case features
-    #X = my_data[:, :10]
-    X = my_data[:1, :14]
+    X = my_data[:, :10]
+    #X = my_data[:1, :14]
     # Normalize the features to (0, 1)
     X_norm = X / X.max(axis=0)
     return X_norm, y
@@ -79,7 +80,7 @@ def gradientChecker(layer, X, y):
     
 if __name__=="__main__":
     X, y = loadDataset()
-    layer_one = layer(13,25,0.0632)
+    layer_one = layer(10,25,0.0632)
     layer_two = layer(25,1,0.1)
     number_epochs=100
     #gradientChecker(layer_one, X, y)
