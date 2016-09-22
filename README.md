@@ -2,7 +2,7 @@
 	BFS DFS, iDFS and AStar are from the sliding puzzle game. BFS uses a queue, DFS stack. Astar estimates the cost by adding up the moves to get to the current state and minimum moves to get to the goal.                                                         
 	Randombot is from the othello game, it is not working yet.
 	
-	layer.py is from the brest cancer prediction.It implements an artificial neural network. It only works for one epoch currently.
+	layer.py is from the brest cancer prediction.It implements an artificial neural network. Right now it let the inputs passes through for one time and backpropagate for one time. The matrices stop to be aligned for the second time.
 	
 	movie.py is the movie cluster program. It groups similar movies together by calculating the avergae score of each movie.Currently not working.
 	
