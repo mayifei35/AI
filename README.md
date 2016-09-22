@@ -4,7 +4,7 @@
 	
 	layer.py is from the brest cancer prediction.It implements an artificial neural network. Right now it let the inputs passes through for one time and backpropagate for one time. The matrices stop to be aligned for the second time.
 	
-	movie.py is the movie cluster program. It groups similar movies together by calculating the avergae score of each movie.Currently not working.
+	movie.py is the movie cluster program. It groups similar movies together by calculating the avergae score of each movie.I'm stuck on creating movie vectors that have scores at the correspoding position.
 	
 	linear_regression.py is using a linear regression model that predicts stock market based on temperature.
 	
